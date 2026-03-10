@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DeskWatch — Know What's Happening. Always.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --ink:    #0a0e1a;
+  --ink2:   #1e2640;
+  --ink3:   #3d4562;
+  --muted:  #7c85a2;
+  --line:   rgba(255,255,255,.08);
+  --blue:   #2563ff;
+  --blueg:  linear-gradient(135deg,#2563ff 0%,#06b6d4 100%);
+  --glow:   rgba(37,99,255,.25);
+  --white:  #f8faff;
+  --card:   rgba(255,255,255,.04);
+  --cardb:  rgba(255,255,255,.08);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--ink);
+  color:var(--white);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:.6;
+}
+
+/* ── TYPOGRAPHY ── */
+h1,h2,h3,h4{font-family:'Sora',sans-serif;line-height:1.15;}
+.display{
+  font-size:clamp(2.8rem,5.5vw,5.2rem);
+  font-weight:800;
+  letter-spacing:-.04em;
+  line-height:1.06;
+}
+.section-title{
+  font-size:clamp(1.9rem,3.2vw,2.9rem);
+  font-weight:700;
+  letter-spacing:-.03em;
+}
+.label{
+  font-size:.72rem;font-weight:600;
+  letter-spacing:.15em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:14px;display:block;
+}
+
+/* ── LAYOUT ── */
+.container{max-width:1160px;margin:0 auto;padding:0 28px;}
+section{position:relative;z-index:1;}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:18px 0;
+  backdrop-filter:blur(20px);
+  background:rgba(10,14,26,.7);
+  border-bottom:1px solid var(--line);
+  transition:.3s;
+}
+.nav-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  max-width:1160px;margin:0 auto;padding:0 28px;
+}
+.nav-logo{
+  font-family:'Sora',sans-serif;
+  font-size:1.22rem;font-weight:800;
+  letter-spacing:-.03em;color:var(--white);
+  text-decoration:none;
+}
+.nav-logo span{
+  background:var(--blueg);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.nav-links{display:flex;gap:32px;align-items:center;}
+.nav-links a{
+  font-size:.88rem;font-weight:500;color:var(--muted);
+  text-decoration:none;transition:.15s;
+}
+.nav-links a:hover{color:var(--white);}
+.nav-cta{
+  background:var(--blueg);color:#fff;
+  padding:9px 22px;border-radius:8px;
+  font-size:.86rem;font-weight:600;
+  text-decoration:none;transition:.15s;
+  font-family:'Sora',sans-serif;
+}
+.nav-cta:hover{opacity:.88;transform:translateY(-1px);}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:flex;align-items:center;
+  padding:120px 0 80px;
+  position:relative;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 60% 40%, rgba(37,99,255,.12) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(6,182,212,.07) 0%, transparent 60%);
+}
+.hero-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:60px;align-items:center;
+  position:relative;z-index:1;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(37,99,255,.12);border:1px solid rgba(37,99,255,.25);
+  border-radius:99px;padding:5px 14px 5px 8px;
+  font-size:.76rem;font-weight:600;color:#93b4ff;
+  margin-bottom:24px;
+}
+.hero-eyebrow-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--blue);animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.hero h1{margin-bottom:22px;}
+.hero h1 .accent{
+  background:var(--blueg);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-sub{
+  font-size:1.08rem;color:var(--muted);
+  line-height:1.75;margin-bottom:36px;
+  font-weight:300;max-width:480px;
+}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--blueg);color:#fff;
+  padding:13px 28px;border-radius:10px;
+  font-size:.94rem;font-weight:600;
+  text-decoration:none;transition:.18s;
+  font-family:'Sora',sans-serif;
+  box-shadow:0 0 32px var(--glow);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 40px var(--glow);}
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:8px;
+  background:transparent;color:var(--white);
+  padding:13px 28px;border-radius:10px;
+  font-size:.94rem;font-weight:500;
+  text-decoration:none;transition:.18s;
+  border:1px solid rgba(255,255,255,.15);
+}
+.btn-secondary:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.25);}
+.hero-note{font-size:.78rem;color:var(--muted);margin-top:14px;}
+
+/* ── HERO VISUAL ── */
+.hero-visual{position:relative;}
+.dashboard-mock{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;
+  padding:20px;
+  backdrop-filter:blur(10px);
+  box-shadow:0 32px 80px rgba(0,0,0,.5);
+  animation:float 5s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.mock-topbar{
+  display:flex;align-items:center;gap:6px;
+  margin-bottom:16px;
+}
+.mock-dot{width:10px;height:10px;border-radius:50%;}
+.mock-title{
+  margin-left:8px;font-size:.72rem;color:var(--muted);
+  font-family:'Sora',sans-serif;font-weight:600;
+}
+.mock-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.mock-stat{
+  background:rgba(255,255,255,.06);border-radius:8px;
+  padding:10px 12px;
+}
+.mock-stat-n{font-size:1.4rem;font-weight:700;font-family:'Sora',sans-serif;}
+.mock-stat-l{font-size:.62rem;color:var(--muted);margin-top:2px;}
+.mock-rows{display:flex;flex-direction:column;gap:6px;}
+.mock-row{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.04);border-radius:7px;padding:8px 10px;
+}
+.mock-av{
+  width:24px;height:24px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;font-weight:700;font-family:'Sora',sans-serif;flex-shrink:0;
+}
+.mock-info{flex:1;}
+.mock-name{font-size:.72rem;font-weight:600;}
+.mock-app{font-size:.62rem;color:var(--muted);}
+.mock-badge{
+  font-size:.6rem;font-weight:600;padding:2px 7px;border-radius:99px;
+}
+
+/* ── STATS BAR ── */
+.stats-bar{
+  padding:50px 0;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+.stats-inner{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:0;
+}
+.stat-item{
+  text-align:center;padding:10px 20px;
+  border-right:1px solid var(--line);
+}
+.stat-item:last-child{border-right:none;}
+.stat-number{
+  font-size:2.4rem;font-weight:800;
+  font-family:'Sora',sans-serif;
+  background:var(--blueg);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:-.04em;
+}
+.stat-desc{font-size:.8rem;color:var(--muted);margin-top:4px;font-weight:400;}
+
+/* ── FEATURES ── */
+.features{padding:100px 0;}
+.features-header{text-align:center;margin-bottom:64px;}
+.features-header p{
+  font-size:1.05rem;color:var(--muted);
+  max-width:520px;margin:16px auto 0;line-height:1.7;
+}
+.features-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:2px;
+  background:var(--line);
+  border:1px solid var(--line);
+  border-radius:18px;overflow:hidden;
+}
+.feat-card{
+  background:var(--ink);
+  padding:32px 28px;
+  transition:.2s;
+  position:relative;overflow:hidden;
+}
+.feat-card::before{
+  content:'';position:absolute;
+  inset:0;opacity:0;transition:.2s;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(37,99,255,.08), transparent);
+}
+.feat-card:hover::before{opacity:1;}
+.feat-card:hover{background:var(--ink2);}
+.feat-icon{
+  width:44px;height:44px;border-radius:11px;
+  background:rgba(37,99,255,.12);border:1px solid rgba(37,99,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;margin-bottom:16px;
+}
+.feat-title{
+  font-family:'Sora',sans-serif;
+  font-size:1rem;font-weight:700;
+  letter-spacing:-.02em;margin-bottom:9px;
+}
+.feat-desc{font-size:.83rem;color:var(--muted);line-height:1.7;}
+.feat-list{
+  list-style:none;margin-top:10px;
+  display:flex;flex-direction:column;gap:5px;
+}
+.feat-list li{
+  font-size:.78rem;color:var(--muted);
+  display:flex;align-items:flex-start;gap:7px;
+  line-height:1.5;
+}
+.feat-list li::before{
+  content:'→';color:var(--blue);
+  font-size:.72rem;margin-top:2px;flex-shrink:0;
+}
+
+/* ── HOW IT WORKS ── */
+.how{padding:100px 0;background:rgba(255,255,255,.02);}
+.how-header{text-align:center;margin-bottom:64px;}
+.steps{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:2px;position:relative;
+}
+.step{
+  background:var(--ink);padding:36px 28px;
+  position:relative;text-align:center;
+}
+.step-num{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--blueg);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Sora',sans-serif;font-weight:800;font-size:1rem;
+  margin:0 auto 18px;
+  box-shadow:0 0 24px var(--glow);
+}
+.step-title{
+  font-family:'Sora',sans-serif;
+  font-size:1.05rem;font-weight:700;
+  margin-bottom:10px;letter-spacing:-.02em;
+}
+.step-desc{font-size:.84rem;color:var(--muted);line-height:1.7;}
+
+/* ── PRICING ── */
+.pricing{padding:100px 0;}
+.pricing-header{text-align:center;margin-bottom:60px;}
+.pricing-header p{font-size:1rem;color:var(--muted);margin-top:14px;}
+.price-card{
+  max-width:520px;margin:0 auto;
+  background:var(--ink2);
+  border:1px solid rgba(37,99,255,.3);
+  border-radius:22px;padding:48px 44px;
+  position:relative;overflow:hidden;
+  box-shadow:0 0 60px rgba(37,99,255,.12);
+}
+.price-card::before{
+  content:'';position:absolute;
+  top:-60px;right:-60px;
+  width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle, rgba(37,99,255,.15), transparent 70%);
+}
+.price-tag-wrap{display:flex;align-items:baseline;gap:6px;margin-bottom:6px;}
+.price-currency{font-size:1.6rem;font-weight:700;font-family:'Sora',sans-serif;color:var(--muted);}
+.price-amount{
+  font-size:4rem;font-weight:800;
+  font-family:'Sora',sans-serif;
+  letter-spacing:-.05em;
+  background:var(--blueg);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.price-period{font-size:.9rem;color:var(--muted);}
+.price-title{
+  font-family:'Sora',sans-serif;
+  font-size:1.5rem;font-weight:700;
+  margin-bottom:6px;letter-spacing:-.03em;
+}
+.price-sub{font-size:.88rem;color:var(--muted);margin-bottom:30px;line-height:1.6;}
+.price-features{
+  list-style:none;
+  display:flex;flex-direction:column;gap:11px;
+  margin-bottom:36px;
+}
+.price-features li{
+  display:flex;align-items:center;gap:10px;
+  font-size:.88rem;
+}
+.price-check{
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(37,99,255,.15);border:1px solid rgba(37,99,255,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;color:var(--blue);flex-shrink:0;
+}
+.price-btn{
+  display:block;text-align:center;
+  background:var(--blueg);color:#fff;
+  padding:15px;border-radius:11px;
+  font-size:.96rem;font-weight:700;
+  text-decoration:none;transition:.18s;
+  font-family:'Sora',sans-serif;
+  box-shadow:0 8px 32px var(--glow);
+}
+.price-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px var(--glow);}
+
+/* ── CONTACT ── */
+.contact{padding:100px 0;background:rgba(255,255,255,.02);}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;}
+.contact-info h2{margin-bottom:16px;}
+.contact-info p{font-size:.95rem;color:var(--muted);line-height:1.75;margin-bottom:36px;}
+.contact-detail{
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:18px;
+}
+.contact-icon{
+  width:40px;height:40px;border-radius:10px;
+  background:rgba(37,99,255,.1);border:1px solid rgba(37,99,255,.2);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  flex-shrink:0;
+}
+.contact-val{font-size:.9rem;font-weight:500;}
+.contact-lbl{font-size:.72rem;color:var(--muted);}
+.form{display:flex;flex-direction:column;gap:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.f-group{display:flex;flex-direction:column;gap:6px;}
+.f-label{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.f-input{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:9px;padding:11px 14px;
+  color:var(--white);font-size:.88rem;
+  font-family:'DM Sans',sans-serif;
+  outline:none;transition:.15s;
+}
+.f-input:focus{border-color:rgba(37,99,255,.5);background:rgba(37,99,255,.06);}
+.f-input::placeholder{color:var(--ink3);}
+textarea.f-input{resize:vertical;min-height:110px;}
+.f-btn{
+  background:var(--blueg);color:#fff;border:none;
+  padding:13px;border-radius:9px;
+  font-size:.92rem;font-weight:700;
+  font-family:'Sora',sans-serif;cursor:pointer;
+  transition:.18s;box-shadow:0 4px 20px var(--glow);
+}
+.f-btn:hover{transform:translateY(-1px);box-shadow:0 8px 30px var(--glow);}
+.f-success{
+  display:none;text-align:center;padding:20px;
+  background:rgba(37,99,255,.1);border:1px solid rgba(37,99,255,.2);
+  border-radius:10px;color:#93b4ff;font-size:.9rem;
+}
+
+/* ── FOOTER ── */
+footer{
+  padding:40px 0;
+  border-top:1px solid var(--line);
+  text-align:center;
+}
+.footer-logo{
+  font-family:'Sora',sans-serif;
+  font-size:1.1rem;font-weight:800;
+  letter-spacing:-.03em;margin-bottom:8px;
+}
+.footer-logo span{
+  background:var(--blueg);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+footer p{font-size:.78rem;color:var(--muted);}
+
+/* ── ANIMATIONS ── */
+.fade-up{opacity:0;transform:translateY(28px);transition:.65s ease;}
+.fade-up.visible{opacity:1;transform:none;}
+
+@media(max-width:900px){
+  .hero-grid,.contact-grid{grid-template-columns:1fr;}
+  .hero-visual{display:none;}
+  .features-grid,.steps{grid-template-columns:1fr;}
+  .stats-inner{grid-template-columns:repeat(2,1fr);}
+  .stat-item{border-right:none;border-bottom:1px solid var(--line);}
+  .form-row{grid-template-columns:1fr;}
+  .nav-links{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">Desk<span>Watch</span></a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <a href="#contact" class="nav-cta">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-eyebrow">
+          <span class="hero-eyebrow-dot"></span>
+          Real-time Employee Monitoring
+        </div>
+        <h1 class="display">
+          Know What's<br/>
+          <span class="accent">Happening.</span><br/>
+          Always.
+        </h1>
+        <p class="hero-sub">
+          DeskWatch gives you complete visibility into your team's activity — live app tracking, attendance, timesheets, and productivity reports. All in one dashboard.
+        </p>
+        <div class="hero-actions">
+          <a href="#contact" class="btn-primary">
+            Get DeskWatch →
+          </a>
+          <a href="#features" class="btn-secondary">
+            See Features
+          </a>
+        </div>
+        <p class="hero-note">₹399/employee/month &nbsp;·&nbsp; Windows 7, 8, 10, 11 &nbsp;·&nbsp; No IT team needed</p>
+      </div>
+      <div class="hero-visual">
+        <div class="dashboard-mock">
+          <div class="mock-topbar">
+            <div class="mock-dot" style="background:#ff5f57"></div>
+            <div class="mock-dot" style="background:#febc2e"></div>
+            <div class="mock-dot" style="background:#28c840"></div>
+            <span class="mock-title">DeskWatch — Dashboard</span>
+          </div>
+          <div class="mock-stats">
+            <div class="mock-stat">
+              <div class="mock-stat-n" style="color:#30d158">8</div>
+              <div class="mock-stat-l">Online Now</div>
+            </div>
+            <div class="mock-stat">
+              <div class="mock-stat-n" style="color:#ffd60a">2</div>
+              <div class="mock-stat-l">Idle</div>
+            </div>
+            <div class="mock-stat">
+              <div class="mock-stat-n" style="color:#2563ff">76%</div>
+              <div class="mock-stat-l">Productivity</div>
+            </div>
+          </div>
+          <div class="mock-rows">
+            <div class="mock-row">
+              <div class="mock-av" style="background:rgba(37,99,255,.2);color:#93b4ff">R</div>
+              <div class="mock-info">
+                <div class="mock-name">Rahul Sharma</div>
+                <div class="mock-app">Microsoft Excel — Sales Report</div>
+              </div>
+              <span class="mock-badge" style="background:rgba(48,209,88,.12);color:#30d158">Online</span>
+            </div>
+            <div class="mock-row">
+              <div class="mock-av" style="background:rgba(191,90,242,.2);color:#bf5af2">A</div>
+              <div class="mock-info">
+                <div class="mock-name">Ankit Naik</div>
+                <div class="mock-app">QuickBooks — ABC Traders</div>
+              </div>
+              <span class="mock-badge" style="background:rgba(48,209,88,.12);color:#30d158">Online</span>
+            </div>
+            <div class="mock-row">
+              <div class="mock-av" style="background:rgba(255,214,10,.15);color:#ffd60a">P</div>
+              <div class="mock-info">
+                <div class="mock-name">Priya Singh</div>
+                <div class="mock-app">No activity — 6 min</div>
+              </div>
+              <span class="mock-badge" style="background:rgba(255,214,10,.12);color:#ffd60a">Idle</span>
+            </div>
+            <div class="mock-row">
+              <div class="mock-av" style="background:rgba(6,182,212,.15);color:#06b6d4">V</div>
+              <div class="mock-info">
+                <div class="mock-name">Vijay Patil</div>
+                <div class="mock-app">Chrome: GST Portal</div>
+              </div>
+              <span class="mock-badge" style="background:rgba(48,209,88,.12);color:#30d158">Online</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="container">
+    <div class="stats-inner">
+      <div class="stat-item fade-up">
+        <div class="stat-number">30s</div>
+        <div class="stat-desc">Live refresh interval</div>
+      </div>
+      <div class="stat-item fade-up">
+        <div class="stat-number">5 min</div>
+        <div class="stat-desc">Idle detection threshold</div>
+      </div>
+      <div class="stat-item fade-up">
+        <div class="stat-number">90+</div>
+        <div class="stat-desc">Days of data retained</div>
+      </div>
+      <div class="stat-item fade-up">
+        <div class="stat-number">0</div>
+        <div class="stat-desc">Admin rights needed</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="features-header fade-up">
+      <span class="label">Everything you need</span>
+      <h2 class="section-title">Complete workforce visibility</h2>
+      <p>From live app tracking to monthly attendance reports — DeskWatch covers every aspect of employee monitoring without complexity.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card fade-up">
+        <div class="feat-icon">📊</div>
+        <div class="feat-title">Live Dashboard</div>
+        <div class="feat-desc">See your entire team at a glance. Online, idle, offline — with current app and productivity score.</div>
+        <ul class="feat-list">
+          <li>Real-time status updates</li>
+          <li>Average team productivity %</li>
+          <li>Today's attendance count</li>
+          <li>Auto-refreshes every 30 seconds</li>
+        </ul>
+      </div>
+      <div class="feat-card fade-up">
+        <div class="feat-icon">📱</div>
+        <div class="feat-title">App Activity Tracking</div>
+        <div class="feat-desc">Know exactly which applications your team uses and for how long — including browser tab titles.</div>
+        <ul class="feat-list">
+          <li>Every app tracked with duration</li>
+          <li>Browser tabs by page title</li>
+          <li>QuickBooks company name</li>
+          <li>Productive / Idle / Neutral categories</li>
+        </ul>
+      </div>
+      <div class="feat-card fade-up">
+        <div class="feat-icon">🕐</div>
+        <div class="feat-title">Timesheets</div>
+        <div class="feat-desc">Accurate clock in/out times with total, active, and idle hours — all in separate columns.</div>
+        <ul class="feat-list">
+          <li>Clock In / Clock Out times</li>
+          <li>Total, Active & Idle hours</li>
+          <li>Filter by date and employee</li>
+          <li>5-minute idle detection</li>
+        </ul>
+      </div>
+      <div class="feat-card fade-up">
+        <div class="feat-icon">📅</div>
+        <div class="feat-title">Attendance Reports</div>
+        <div class="feat-desc">Date range reports showing present/absent days with attendance percentage per employee.</div>
+        <ul class="feat-list">
+          <li>Visual calendar grid</li>
+          <li>Attendance percentage</li>
+          <li>Daily clock in/out times</li>
+          <li>Custom date range filter</li>
+        </ul>
+      </div>
+      <div class="feat-card fade-up">
+        <div class="feat-icon">🖥️</div>
+        <div class="feat-title">Silent Agent</div>
+        <div class="feat-desc">Installs silently on employee PCs. Auto-starts on every Windows login. No IT team required.</div>
+        <ul class="feat-list">
+          <li>Works on Windows 7–11</li>
+          <li>No admin rights needed</li>
+          <li>System tray Start/Stop control</li>
+          <li>Stopping = instant offline status</li>
+        </ul>
+      </div>
+      <div class="feat-card fade-up">
+        <div class="feat-icon">🔒</div>
+        <div class="feat-title">Security & Backups</div>
+        <div class="feat-desc">JWT-protected admin login. Automatic daily backups with 30-day retention and one-click download.</div>
+        <ul class="feat-list">
+          <li>JWT login — admin only</li>
+          <li>All API endpoints protected</li>
+          <li>Auto-backup every 24 hours</li>
+          <li>Last 30 backups kept</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="how-header fade-up">
+      <span class="label">Simple setup</span>
+      <h2 class="section-title">Up and running in minutes</h2>
+    </div>
+    <div class="steps">
+      <div class="step fade-up">
+        <div class="step-num">1</div>
+        <div class="step-title">Setup Server</div>
+        <div class="step-desc">Run one bat file on your admin PC. Installs everything automatically and opens the dashboard in your browser.</div>
+      </div>
+      <div class="step fade-up">
+        <div class="step-num">2</div>
+        <div class="step-title">Generate Installer</div>
+        <div class="step-desc">Enter each employee's name. A ready-to-use installer folder is created automatically — no technical knowledge needed.</div>
+      </div>
+      <div class="step fade-up">
+        <div class="step-num">3</div>
+        <div class="step-title">Monitor Your Team</div>
+        <div class="step-desc">Employee runs the installer once. They appear on your dashboard within 30 seconds. That's it — you're live.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="pricing-header fade-up">
+      <span class="label">Simple pricing</span>
+      <h2 class="section-title">One plan. All features.</h2>
+      <p>No hidden fees. No feature limits. Pay only for the employees you monitor.</p>
+    </div>
+    <div class="price-card fade-up">
+      <div class="price-title">DeskWatch</div>
+      <div class="price-sub">Full access to every feature. Cancel anytime.</div>
+      <div class="price-tag-wrap">
+        <span class="price-currency">₹</span>
+        <span class="price-amount">399</span>
+        <span class="price-period">&nbsp;/ employee / month</span>
+      </div>
+      <br/>
+      <ul class="price-features">
+        <li><span class="price-check">✓</span>Live dashboard — Online / Idle / Offline</li>
+        <li><span class="price-check">✓</span>App activity tracking with browser tabs</li>
+        <li><span class="price-check">✓</span>QuickBooks company name detection</li>
+        <li><span class="price-check">✓</span>Timesheets — Total, Active & Idle hours</li>
+        <li><span class="price-check">✓</span>Attendance reports with calendar view</li>
+        <li><span class="price-check">✓</span>Remote stop agent from dashboard</li>
+        <li><span class="price-check">✓</span>Auto-backup every 24 hours</li>
+        <li><span class="price-check">✓</span>Works on Windows 7, 8, 10, 11</li>
+        <li><span class="price-check">✓</span>One-time setup — no ongoing IT needed</li>
+      </ul>
+      <a href="#contact" class="price-btn">Get Started Today</a>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="container">
+    <div class="contact-grid">
+      <div class="contact-info fade-up">
+        <span class="label">Get in touch</span>
+        <h2 class="section-title">Ready to monitor<br/>your team?</h2>
+        <p>Contact us to get DeskWatch set up for your business. We'll walk you through the installation and get you live within the same day.</p>
+        <div class="contact-detail">
+          <div class="contact-icon">📞</div>
+          <div>
+            <div class="contact-lbl">Phone / WhatsApp</div>
+            <div class="contact-val">+91 88668 17254</div>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-icon">✉️</div>
+          <div>
+            <div class="contact-lbl">Email</div>
+            <div class="contact-val">ankit.naik18@gmail.com</div>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-icon">🏢</div>
+          <div>
+            <div class="contact-lbl">Company</div>
+            <div class="contact-val">2-Mind Solutions</div>
+          </div>
+        </div>
+      </div>
+      <div class="fade-up">
+        <div class="form" id="contactForm">
+          <div class="form-row">
+            <div class="f-group">
+              <label class="f-label">Your Name</label>
+              <input class="f-input" type="text" placeholder="Rahul Sharma" id="f-name"/>
+            </div>
+            <div class="f-group">
+              <label class="f-label">Company</label>
+              <input class="f-input" type="text" placeholder="ABC Pvt Ltd" id="f-company"/>
+            </div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Phone / WhatsApp</label>
+            <input class="f-input" type="tel" placeholder="+91 98765 43210" id="f-phone"/>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Email</label>
+            <input class="f-input" type="email" placeholder="you@company.com" id="f-email"/>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Number of Employees</label>
+            <input class="f-input" type="number" placeholder="e.g. 15" id="f-emps"/>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Message</label>
+            <textarea class="f-input" placeholder="Tell us about your requirements..." id="f-msg"></textarea>
+          </div>
+          <button class="f-btn" onclick="submitForm()">Send Message →</button>
+        </div>
+        <div class="f-success" id="f-success">
+          ✅ Thank you! We'll contact you within 24 hours on WhatsApp or Email.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-logo">Desk<span>Watch</span></div>
+    <p>by 2-Mind Solutions &nbsp;·&nbsp; +91 88668 17254 &nbsp;·&nbsp; ankit.naik18@gmail.com</p>
+    <p style="margin-top:8px">© 2025 2-Mind Solutions. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+// Scroll animations
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) { e.target.classList.add('visible'); }
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.fade-up').forEach(function(el) { observer.observe(el); });
+
+// Form submit — opens WhatsApp with the message
+function submitForm() {
+  var name    = document.getElementById('f-name').value.trim();
+  var company = document.getElementById('f-company').value.trim();
+  var phone   = document.getElementById('f-phone').value.trim();
+  var email   = document.getElementById('f-email').value.trim();
+  var emps    = document.getElementById('f-emps').value.trim();
+  var msg     = document.getElementById('f-msg').value.trim();
+
+  if (!name || !phone) { alert('Please enter your name and phone number.'); return; }
+
+  var text = 'Hello! I am interested in DeskWatch.\n\n' +
+    'Name: ' + name + '\n' +
+    (company ? 'Company: ' + company + '\n' : '') +
+    'Phone: ' + phone + '\n' +
+    (email ? 'Email: ' + email + '\n' : '') +
+    (emps ? 'Employees: ' + emps + '\n' : '') +
+    (msg ? '\nMessage: ' + msg : '');
+
+  var waUrl = 'https://wa.me/918866817254?text=' + encodeURIComponent(text);
+  window.open(waUrl, '_blank');
+
+  document.getElementById('contactForm').style.display = 'none';
+  document.getElementById('f-success').style.display   = 'block';
+}
+
+// Navbar scroll effect
+window.addEventListener('scroll', function() {
+  var nav = document.querySelector('nav');
+  if (window.scrollY > 50) {
+    nav.style.background = 'rgba(10,14,26,.95)';
+  } else {
+    nav.style.background = 'rgba(10,14,26,.7)';
+  }
+});
+</script>
+</body>
+</html>
