@@ -1368,10 +1368,21 @@ if (chartBars) {
 const rows = document.querySelectorAll('#db-rows tr');
 let rowIndex = 0;
 setInterval(() => {
-  rows.forEach(r => r.style.background = '');
-  rows[rowIndex % rows.length].style.background = 'rgba(41,151,255,0.06)';
+  rows.forEach(r=>{
+    r.style.transition='background 0.6s ease';
+    r.style.background='';
+  });
+
+  const row = rows[rowIndex % rows.length];
+  row.style.background='rgba(41,151,255,0.08)';
+  row.style.transform='scale(1.01)';
+
+  setTimeout(()=>{
+    row.style.transform='';
+  },800);
+
   rowIndex++;
-}, 2000);
+},1800);
 
 /* ── Smooth anchor links ────────────────────────────────── */
 document.querySelectorAll('a[href^="#"]').forEach(a => {
